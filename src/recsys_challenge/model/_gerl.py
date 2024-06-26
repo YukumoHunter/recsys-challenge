@@ -2,7 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from pathlib import Path
+
 from ._modules import SelfAttention
+from ._title_encoder import TitleEncoder
 
 
 class GERLModel(nn.Module):
@@ -10,19 +13,24 @@ class GERLModel(nn.Module):
         self,
         batch_size: int,
         neg_count: int,
-        embedding_size: int,
         max_user_one_hop: int,
         max_user_two_hop: int,
         max_article_two_hop: int,
         id_embedding_size: int,
+        word_embedding_size: int,
         user_count: int,
         article_count: int,
+        word_vocab_path: Path,
+        title_embedding_path: Path,
+        num_heads: int,
+        head_size: int,
         dropout: float = 0.2,
+        pretrained_embedding_path: Path = None,
     ):
         super(GERLModel, self).__init__()
         self.batch_size = batch_size
         self.neg_count = neg_count
-        self.embedding_size = embedding_size
+        self.embedding_size = id_embedding_size
 
         self.max_user_one_hop = max_user_one_hop
         self.max_user_two_hop = max_user_two_hop
@@ -31,7 +39,15 @@ class GERLModel(nn.Module):
         self.user_embedding = nn.Embedding(user_count, id_embedding_size)
         self.article_embedding = nn.Embedding(article_count, id_embedding_size)
 
-        self.title_encoder = None  # todo; need title encoder
+        self.title_encoder = TitleEncoder(
+            word_embedding_size,
+            num_heads,
+            head_size,
+            word_vocab_path,
+            title_embedding_path,
+            pretrained_embedding_path,
+            dropout,
+        )
 
         self.user_two_hop_attn = SelfAttention(id_embedding_size, id_embedding_size)
         self.user_one_hop_attn = SelfAttention(id_embedding_size, id_embedding_size)
@@ -114,3 +130,40 @@ class GERLModel(nn.Module):
         return torch.sum(final_user_repr * final_target_articles_repr, dim=-1).view(
             -1, num_target_news
         )
+
+    def forward_train(self, batch):
+        user, hist_articles, neighbour_users, target_articles, neighbour_articles = (
+            batch["user"],
+            batch["hist_news"],
+            batch["neighbor_users"],
+            batch["target_news"],
+            batch["neighbor_news"],
+        )
+
+        # note: we set num_target_news to 5!
+        logits = self.forward(
+            user, hist_articles, neighbour_users, target_articles, neighbour_articles, 5
+        )
+
+        target = batch["y"]
+        loss = F.cross_entropy(logits, target)
+
+        return loss
+
+    def forward_eval(self, batch):
+        user, hist_articles, neighbour_users, target_articles, neighbour_articles = (
+            batch["user"],
+            batch["hist_news"],
+            batch["neighbor_users"],
+            batch["target_news"],
+            batch["neighbor_news"],
+        )
+        target_articles = target_articles.unsqueeze(-1)
+        neighbour_articles = neighbour_articles.unsqueeze(-1)
+
+        # note: for prediction, we set num_target_news to 1!
+        logits = self.forward(
+            user, hist_articles, neighbour_users, target_articles, neighbour_articles, 1
+        )
+
+        return logits.view(-1)

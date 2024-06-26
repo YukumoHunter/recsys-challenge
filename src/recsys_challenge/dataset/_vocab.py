@@ -2,6 +2,8 @@ import pickle
 import tqdm
 from collections import Counter
 
+from pathlib import Path
+
 
 class TorchVocab(object):
     """Defines a vocabulary object that will be used to numericalize a field.
@@ -112,11 +114,11 @@ class Vocab(TorchVocab):
         pass
 
     @staticmethod
-    def load_vocab(vocab_path: str) -> "Vocab":
+    def load_vocab(vocab_path: Path) -> "Vocab":
         with open(vocab_path, "rb") as f:
             return pickle.load(f)
 
-    def save_vocab(self, vocab_path):
+    def save_vocab(self, vocab_path: Path):
         with open(vocab_path, "wb") as f:
             pickle.dump(self, f)
 
