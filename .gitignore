@@ -11,3 +11,9 @@ wheels/
 
 notebooks/downloads
 .ruff_cache
+
+*.parquet
+*.bin
+*.npy
+
+data/**
