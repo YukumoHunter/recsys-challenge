@@ -33,7 +33,7 @@ class SelfAttention(nn.Module):
         p_attn = F.softmax(gates, dim=-1)
         p_attn = p_attn.unsqueeze(-1)
 
-        h = p_attn * seqs
+        h = seqs * p_attn
         return h.sum(dim=1)
 
 

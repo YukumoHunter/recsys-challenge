@@ -40,7 +40,7 @@ def train_single_epoch(model, train_loader, optimizer, device):
 
     total_loss = []
 
-    for batch in train_loader:
+    for batch in tqdm(train_loader, desc="Train", leave=False):
         optimizer.zero_grad()
 
         batch = {k: v.to(device) for k, v in batch.items()}
@@ -184,12 +184,12 @@ def parse_args():
     model_params.add_argument(
         "--id-embedding-size",
         type=int,
-        default=1,
+        default=128,
     )
     model_params.add_argument(
         "--word-embedding-size",
         type=int,
-        default=1,
+        default=768,
     )
     model_params.add_argument(
         "--num-heads",
