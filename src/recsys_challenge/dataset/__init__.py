@@ -127,8 +127,6 @@ class ValidationDataset(TrainingDataset):
             "impression_id": imp_id,
         }
 
-        print(f"eval {output}")
-
         return {key: torch.tensor(value) for key, value in output.items()}
 
     def parse_line(self, item):
