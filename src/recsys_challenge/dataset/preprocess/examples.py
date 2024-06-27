@@ -13,16 +13,16 @@ from recsys_challenge.dataset._vocab import WordVocab
 
 # split examples into first positive and negative samples
 # and return a list with positive in index 0
-def make_samples(row, test):
+def make_samples(row, newsid_vocab, test):
     samples = row["article_ids_inview"]
 
-    if test:
-        return samples
+    if not test:
+        positive = row["article_ids_clicked"]
+        negative = [x for x in samples if x not in positive]
 
-    positive = row["article_ids_clicked"]
-    negative = [x for x in samples if x not in positive]
+        samples = [positive[0]] + negative
 
-    return [positive[0]] + negative
+    return [newsid_vocab.stoi.get(sample, 0) for sample in samples]
 
 
 def build_examples(
@@ -63,7 +63,7 @@ def build_examples(
         neighbor_news = []
         y = 0
 
-        target_news = make_samples(row, test)
+        target_news = make_samples(row, newsid_vocab, test)
 
         # not enough negative samples
         if len(target_news) < (negative_sampling_ratio + 1):
