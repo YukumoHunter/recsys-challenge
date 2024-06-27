@@ -25,6 +25,12 @@ def main():
         train_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True
     )
 
+    print("Setting up validation dataset...")
+    validation_dataset = setup_validation_dataset(args)
+    validation_loader = DataLoader(
+        validation_dataset, batch_size=args.batch_size, shuffle=False, drop_last=False
+    )
+
     print("Setting up model...")
     model = setup_model(args, device)
 
@@ -37,9 +43,10 @@ def main():
     pbar = tqdm(range(args.epochs), desc="Epoch")
     for epoch in pbar:
         train_metrics = train_single_epoch(model, train_loader, optimizer, device)
-        # todo: validation
+        dev_metrics = evaluate(model, validation_loader, device)
+
         pbar.write(
-            f"[{epoch + 1}/{args.epochs}] Train Loss: {train_metrics['loss']:.4f}"
+            f"[{epoch + 1}/{args.epochs}] Dev Loss: {dev_metrics['loss']:.4f} Train Loss: {train_metrics['loss']:.4f}"
         )
 
 
@@ -61,6 +68,18 @@ def train_single_epoch(model, train_loader, optimizer, device):
     return {"loss": sum(total_loss) / len(total_loss)}
 
 
+def evaluate(model, validation_loader, device):
+    model.eval()
+    total_loss = []
+    with torch.no_grad():
+        for batch in tqdm(validation_loader, desc="Dev", leave=False):
+            batch = {k: v.to(device) for k, v in batch.items()}
+            loss = model.forward_eval(batch)
+            total_loss.append(loss.item())
+
+    return {"loss": sum(total_loss) / len(total_loss)}
+
+
 def setup_train_dataset(args):
     train_dataset = TrainingDataset(
         args.max_user_one_hop,
@@ -70,6 +89,17 @@ def setup_train_dataset(args):
     )
 
     return train_dataset
+
+
+def setup_validation_dataset(args):
+    validation_dataset = ValidationDataset(
+        args.max_user_one_hop,
+        args.max_user_two_hop,
+        args.max_article_two_hop,
+        args.validation_examples,
+    )
+
+    return validation_dataset
 
 
 def setup_model(args, device):
