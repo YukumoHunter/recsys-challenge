@@ -98,9 +98,9 @@ def evaluate(model, validation_loader, device):
 
             target = batch["y"]
 
-            predictions.append(logits.cpu().numpy().tolist())
-            targets.append(target.long().cpu().numpy().tolist())
-            impression_ids.append(batch["impression_id"].cpu().numpy().tolist())
+            predictions += logits.cpu().numpy().tolist()
+            targets += target.long().cpu().numpy().tolist()
+            impression_ids += batch["impression_id"].cpu().numpy().tolist()
 
         all_labels, all_preds = group_labels(targets, predictions, impression_ids)
 
