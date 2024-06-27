@@ -18,7 +18,7 @@ GERL 的主模型
 
 import json
 
-import tqdm
+from tqdm.auto import tqdm
 import torch
 from torch.utils.data import Dataset
 
@@ -34,7 +34,7 @@ class TrainingDataset(Dataset):
         self.corpus_path = corpus_path
 
         with open(corpus_path, "r") as f:
-            self.lines = [line.strip() for line in tqdm.tqdm(f, desc="Loading Dataset")]
+            self.lines = [line.strip() for line in tqdm(f, desc="Loading Dataset")]
             self.corpus_lines = len(self.lines)
 
     def __len__(self):

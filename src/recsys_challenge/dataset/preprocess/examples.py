@@ -13,8 +13,11 @@ from recsys_challenge.dataset._vocab import WordVocab
 
 # split examples into first positive and negative samples
 # and return a list with positive in index 0
-def make_samples(row):
+def make_samples(row, test):
     samples = row["article_ids_inview"]
+
+    if test:
+        return samples
 
     positive = row["article_ids_clicked"]
     negative = [x for x in samples if x not in positive]
@@ -38,17 +41,13 @@ def build_examples(
     max_news_two_hop: int = 15,
     output_name: str = "training_examples.tsv",
     shuffle_label: bool = False,
+    test: bool = False,
     seed: int = 7,
 ):
     random.seed(seed)
 
-    def _get_neighbors(neighbor_dict, key, max_neighbor_num, dbg=False):
-        # if dbg:
-        #     print([k for k in neighbor_dict.keys()][:10])
-        #     print(key)
+    def _get_neighbors(neighbor_dict, key, max_neighbor_num):
         neighbors = neighbor_dict.get(key, [])
-        # print(neighbors)
-        # input()
         return neighbors[:max_neighbor_num]
 
     f_out = output_path / output_name
@@ -64,7 +63,7 @@ def build_examples(
         neighbor_news = []
         y = 0
 
-        target_news = make_samples(row)
+        target_news = make_samples(row, test)
 
         # not enough negative samples
         if len(target_news) < (negative_sampling_ratio + 1):
@@ -82,7 +81,7 @@ def build_examples(
 
         for nid in target_news:
             nid = str(nid)
-            news_index = newsid_vocab.stoi[nid]
+            news_index = newsid_vocab.stoi.get(nid, 0)
 
             # hist_users.append(_get_neighors(news_one_hop, news_index, cfg.max_news_one_hop))
             neighbor = _get_neighbors(news_two_hop, news_index, max_news_two_hop)

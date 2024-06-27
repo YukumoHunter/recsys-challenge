@@ -129,7 +129,7 @@ class WordVocab(Vocab):
         print("Building Vocab")
         self.lower = lower
         counter = Counter()
-        for line in tqdm.tqdm(texts):
+        for line in tqdm(texts):
             if isinstance(line, list):
                 words = line
             else:
