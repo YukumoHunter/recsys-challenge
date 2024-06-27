@@ -62,11 +62,11 @@ class TrainingDataset(Dataset):
                 0,
             ] * (self.max_user_two_hop - len(neighbor_users))
 
-        for idx in range(len(neighbor_news)):
-            if len(neighbor_news[idx]) < self.max_article_two_hop:
-                neighbor_news[idx] = neighbor_news[idx] + [
+        for news in neighbor_news:
+            if len(news) < self.max_article_two_hop:
+                news += [
                     0,
-                ] * (self.max_article_two_hop - len(neighbor_news[idx]))
+                ] * (self.max_article_two_hop - len(news))
 
         output = {
             "user": user,
@@ -110,20 +110,24 @@ class ValidationDataset(TrainingDataset):
                 0,
             ] * (self.max_user_two_hop - len(neighbor_users))
 
-        if len(neighbor_news) < self.max_article_two_hop:
-            neighbor_news = neighbor_news + [
-                0,
-            ] * (self.max_article_two_hop - len(neighbor_news))
+
+        for news in neighbor_news:
+            if len(news) < self.max_article_two_hop:
+                news += [
+                    0,
+                ] * (self.max_article_two_hop - len(news))
 
         output = {
             "user": user,
             "hist_news": hist_news,
             "neighbor_users": neighbor_users,
-            "target_news": target_news,
-            "neighbor_news": neighbor_news,
+            "target_news": [target_news[0]],
+            "neighbor_news": [neighbor_news[0]],
             "y": y,
             "impression_id": imp_id,
         }
+
+        print(f"eval {output}")
 
         return {key: torch.tensor(value) for key, value in output.items()}
 
