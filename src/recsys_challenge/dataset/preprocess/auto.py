@@ -26,7 +26,10 @@ from recsys_challenge.dataset.preprocess.neighbors import (
 from recsys_challenge.dataset.preprocess.examples import load_hop_dict, build_examples
 
 
-def main(split):
+def main(args):
+    split = args.split
+    no_test = args.no_test
+
     PATH = Path(f"./data/{split}")
     TEST_PATH = Path("./data/testset")
 
@@ -102,8 +105,13 @@ def main(split):
         )
 
     ## Generate examples
+    if no_test:
+        splits = [TRAIN_SPLIT, VAL_SPLIT]
+    else:
+        splits = [TRAIN_SPLIT, VAL_SPLIT, TEST_SPLIT]
 
-    for split in [TRAIN_SPLIT, VAL_SPLIT, TEST_SPLIT]:
+
+    for split in splits:
         if split == TEST_SPLIT:
             df_behaviors = pl.read_parquet(TEST_PATH / split / "behaviors.parquet")
         else:
@@ -161,6 +169,7 @@ def main(split):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--split", type=str, default="small")
+    parser.add_argument("--no_test", action="store_true", default=False)
     args = parser.parse_args()
 
-    main(args.split)
+    main(args)
