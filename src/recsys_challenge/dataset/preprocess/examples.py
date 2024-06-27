@@ -22,7 +22,7 @@ def make_samples(row, newsid_vocab, test):
 
         samples = [positive[0]] + negative
 
-    return [newsid_vocab.stoi.get(sample, 0) for sample in samples]
+    return [newsid_vocab.stoi.get(str(sample), 0) for sample in samples]
 
 
 def build_examples(
