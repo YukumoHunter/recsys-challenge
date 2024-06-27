@@ -105,8 +105,8 @@ def evaluate(model, validation_loader, device):
         all_labels, all_preds = group_labels(targets, predictions, impression_ids)
 
         metrics = MetricEvaluator(
-            targets,
-            predictions,
+            all_labels,
+            all_preds,
             metric_functions=[
                 AucScore(),
                 MrrScore(),
