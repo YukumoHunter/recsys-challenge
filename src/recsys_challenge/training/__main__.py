@@ -89,7 +89,7 @@ def train_single_epoch(model, train_loader, optimizer, device):
 def evaluate(model, validation_loader, device):
     model.eval()
 
-    predictions, targets, losses = [], [], []
+    predictions, targets, impression_ids = [], [], []
 
     with torch.no_grad():
         for batch in tqdm(validation_loader, desc="Dev", leave=False):
@@ -98,8 +98,11 @@ def evaluate(model, validation_loader, device):
 
             target = batch["y"]
 
-            predictions.append(logits.cpu().numpy())
-            targets.append(target.view(-1).cpu().numpy())
+            predictions.append(logits.cpu().numpy().tolist())
+            targets.append(target.long().cpu().numpy().tolist())
+            impression_ids.append(batch["impression_id"].cpu().numpy().tolist())
+
+        all_labels, all_preds = group_labels(targets, predictions, impression_ids)
 
         metrics = MetricEvaluator(
             targets,
@@ -116,9 +119,35 @@ def evaluate(model, validation_loader, device):
             ],
         ).evaluate()
 
-        metrics["loss"] = [sum(losses) / len(losses)]
-
     return metrics
+
+
+def group_labels(labels, preds, group_keys):
+    """Devide labels and preds into several group according to values in group keys.
+    Args:
+        labels (list): ground truth label list.
+        preds (list): prediction score list.
+        group_keys (list): group key list.
+    Returns:
+        all_labels: labels after group.
+        all_preds: preds after group.
+    """
+
+    all_keys = list(set(group_keys))
+    group_labels = {k: [] for k in all_keys}
+    group_preds = {k: [] for k in all_keys}
+
+    for label, pred, key in zip(labels, preds, group_keys):
+        group_labels[key].append(label)
+        group_preds[key].append(pred)
+
+    all_labels = []
+    all_preds = []
+    for k in all_keys:
+        all_labels.append(group_labels[k])
+        all_preds.append(group_preds[k])
+
+    return all_labels, all_preds
 
 
 def setup_train_dataset(args):
