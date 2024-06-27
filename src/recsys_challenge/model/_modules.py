@@ -38,7 +38,7 @@ class SelfAttention(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __input__(self, input_size: int, num_heads: int, head_size: int):
+    def __init__(self, input_size: int, num_heads: int, head_size: int):
         super(MultiHeadAttention, self).__init__()
         self.input_size = input_size
         self.num_heads = num_heads

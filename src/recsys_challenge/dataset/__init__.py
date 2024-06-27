@@ -21,16 +21,23 @@ import json
 from tqdm.auto import tqdm
 import torch
 from torch.utils.data import Dataset
+from pathlib import Path
+
 
 from ._vocab import TorchVocab, WordVocab, Vocab
 
 
 class TrainingDataset(Dataset):
-    def __init__(self, args, corpus_path):
-        self.args = args
-        self.max_user_two_hop = args.max_user_two_hop
-        self.max_user_one_hop = args.max_user_one_hop
-        self.max_news_two_hop = args.max_news_two_hop
+    def __init__(
+        self,
+        max_user_two_hop: int,
+        max_user_one_hop: int,
+        max_article_two_hop: int,
+        corpus_path: Path,
+    ):
+        self.max_user_two_hop = max_user_two_hop
+        self.max_user_one_hop = max_user_one_hop
+        self.max_article_two_hop = max_article_two_hop
         self.corpus_path = corpus_path
 
         with open(corpus_path, "r") as f:
@@ -56,10 +63,10 @@ class TrainingDataset(Dataset):
             ] * (self.max_user_two_hop - len(neighbor_users))
 
         for idx in range(len(neighbor_news)):
-            if len(neighbor_news[idx]) < self.max_news_two_hop:
+            if len(neighbor_news[idx]) < self.max_article_two_hop:
                 neighbor_news[idx] = neighbor_news[idx] + [
                     0,
-                ] * (self.max_news_two_hop - len(neighbor_news[idx]))
+                ] * (self.max_article_two_hop - len(neighbor_news[idx]))
 
         output = {
             "user": user,
@@ -103,10 +110,10 @@ class ValidationDataset(TrainingDataset):
                 0,
             ] * (self.max_user_two_hop - len(neighbor_users))
 
-        if len(neighbor_news) < self.max_news_two_hop:
+        if len(neighbor_news) < self.max_article_two_hop:
             neighbor_news = neighbor_news + [
                 0,
-            ] * (self.max_news_two_hop - len(neighbor_news))
+            ] * (self.max_article_two_hop - len(neighbor_news))
 
         output = {
             "user": user,
