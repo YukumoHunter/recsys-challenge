@@ -122,7 +122,7 @@ class ValidationDataset(TrainingDataset):
             "target_news": target_news,
             "neighbor_news": neighbor_news,
             "y": y,
-            "imp_id": imp_id,
+            "impression_id": imp_id,
         }
 
         return {key: torch.tensor(value) for key, value in output.items()}
@@ -137,7 +137,7 @@ class ValidationDataset(TrainingDataset):
         target_news = j["target_news"]
         neighbor_news = j["neighbor_news"]
         y = j["y"]
-        imp_id = j["imp_id"]
+        imp_id = j["impression_id"]
 
         return user, hist_news, neighbor_users, target_news, neighbor_news, y, imp_id
 
