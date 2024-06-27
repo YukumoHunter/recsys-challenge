@@ -98,8 +98,8 @@ def evaluate(model, validation_loader, device):
 
             target = batch["y"]
 
-            predictions.append(logits)
-            targets.append(target)
+            predictions.append(logits.cpu().numpy())
+            targets.append(target.cpu().numpy())
 
         metrics = MetricEvaluator(
             targets,
