@@ -55,10 +55,6 @@ def train_single_epoch(model, train_loader, optimizer, device):
         loss = model.forward_train(batch)
         loss.backward()
         optimizer.step()
-        if len(total_loss) > 0:
-            print(
-                "loss:", loss.item(), "total_loss:", sum(total_loss) / len(total_loss)
-            )
 
         total_loss.append(loss.item())
 
