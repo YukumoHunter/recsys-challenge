@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 import argparse
+from pathlib import Path
 
 from tqdm import tqdm
 
@@ -45,6 +46,8 @@ def main():
     print("Setting up model...")
     model = setup_model(args, device)
 
+    Path(".checkpoints").mkdir(exist_ok=True, parents=True)
+
     # todo: accumulate gradients and average over multiple devices
     steps_per_epoch = len(train_dataset)
     train_steps = args.epochs * steps_per_epoch
@@ -55,6 +58,9 @@ def main():
     for epoch in pbar:
         train_metrics = train_single_epoch(model, train_loader, optimizer, device)
         dev_metrics = evaluate(model, validation_loader, device)
+
+        # save model checkpoint
+        torch.save(model.state_dict(), f".checkpoints/model_checkpoint_{epoch}.pt")
 
         pbar.write(
             f"[{epoch + 1}/{args.epochs}] Dev Loss: {dev_metrics['loss']:.4f} Train Loss: {train_metrics['loss']:.4f}"
@@ -88,13 +94,12 @@ def evaluate(model, validation_loader, device):
     with torch.no_grad():
         for batch in tqdm(validation_loader, desc="Dev", leave=False):
             batch = {k: v.to(device) for k, v in batch.items()}
-            loss, logits = model.forward_eval(batch)
+            logits = model.forward_eval(batch)
 
             target = batch["y"]
 
             predictions.append(logits)
             targets.append(target)
-            losses.append(loss.item())
 
         metrics = MetricEvaluator(
             targets,

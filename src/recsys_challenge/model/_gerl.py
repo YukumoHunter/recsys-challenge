@@ -176,6 +176,4 @@ class GERLModel(nn.Module):
             user, hist_articles, neighbour_users, target_articles, neighbour_articles, 1
         )
 
-        loss = F.cross_entropy(logits, batch["y"])
-
-        return loss, logits
+        return logits.view(-1)
