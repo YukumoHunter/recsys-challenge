@@ -30,8 +30,8 @@ from ._vocab import TorchVocab, WordVocab, Vocab
 class TrainingDataset(Dataset):
     def __init__(
         self,
-        max_user_two_hop: int,
         max_user_one_hop: int,
+        max_user_two_hop: int,
         max_article_two_hop: int,
         corpus_path: Path,
     ):
