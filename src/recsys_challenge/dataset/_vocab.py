@@ -1,5 +1,5 @@
 import pickle
-import tqdm
+from tqdm.auto import tqdm
 from collections import Counter
 
 from pathlib import Path
