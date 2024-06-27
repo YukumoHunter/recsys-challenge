@@ -7,11 +7,17 @@ from tqdm import tqdm
 from ..model import GERLModel
 from ..dataset import TrainingDataset, ValidationDataset
 
+import numpy as np
+import random
+
 
 def main():
     args = parse_args()
     device = torch.device(args.device)
     print(f"Using device: {device}")
+
+    print(f"Using seed: {args.seed}")
+    setup_seed(args.seed)
 
     print("Setting up training dataset...")
     train_dataset = setup_train_dataset(args)
@@ -86,6 +92,16 @@ def setup_model(args, device):
     model.title_encoder.title_embedding = model.title_encoder.title_embedding.to(device)
 
     return model
+
+
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def parse_args():
