@@ -7,6 +7,17 @@ from tqdm import tqdm
 from ..model import GERLModel
 from ..dataset import TrainingDataset, ValidationDataset
 
+from ..evaluation import (
+    MetricEvaluator,
+    AucScore,
+    MrrScore,
+    NdcgScore,
+    LogLossScore,
+    RootMeanSquaredError,
+    AccuracyScore,
+    F1Score,
+)
+
 import numpy as np
 import random
 
@@ -48,6 +59,7 @@ def main():
         pbar.write(
             f"[{epoch + 1}/{args.epochs}] Dev Loss: {dev_metrics['loss']:.4f} Train Loss: {train_metrics['loss']:.4f}"
         )
+        pbar.write(f"Dev Metrics: {dev_metrics}")
 
 
 def train_single_epoch(model, train_loader, optimizer, device):
@@ -70,14 +82,39 @@ def train_single_epoch(model, train_loader, optimizer, device):
 
 def evaluate(model, validation_loader, device):
     model.eval()
-    total_loss = []
+
+    predictions, targets, losses = [], [], []
+
     with torch.no_grad():
         for batch in tqdm(validation_loader, desc="Dev", leave=False):
             batch = {k: v.to(device) for k, v in batch.items()}
-            loss = model.forward_eval(batch)
-            total_loss.append(loss.item())
+            logits = model.forward_eval(batch)
 
-    return {"loss": sum(total_loss) / len(total_loss)}
+            target = batch["y"]
+            loss, logits = torch.nn.functional.cross_entropy(logits, target)
+
+            predictions.append(logits)
+            targets.append(target)
+            losses.append(loss.item())
+
+        metrics = MetricEvaluator(
+            targets,
+            predictions,
+            metric_functions=[
+                AucScore(),
+                MrrScore(),
+                NdcgScore(k=5),
+                NdcgScore(k=10),
+                LogLossScore(),
+                RootMeanSquaredError(),
+                AccuracyScore(threshold=0.5),
+                F1Score(threshold=0.5),
+            ],
+        ).evaluate()
+
+        metrics["loss"] = [sum(losses) / len(losses)]
+
+    return metrics
 
 
 def setup_train_dataset(args):

@@ -6,6 +6,16 @@ from pathlib import Path
 
 from ._modules import SelfAttention
 from ._title_encoder import TitleEncoder
+from ..evaluation import (
+    MetricEvaluator,
+    AucScore,
+    MrrScore,
+    NdcgScore,
+    LogLossScore,
+    RootMeanSquaredError,
+    AccuracyScore,
+    F1Score,
+)
 
 
 class GERLModel(nn.Module):
@@ -166,4 +176,6 @@ class GERLModel(nn.Module):
             user, hist_articles, neighbour_users, target_articles, neighbour_articles, 1
         )
 
-        return logits.view(-1)
+        loss = F.cross_entropy(logits, batch["y"])
+
+        return loss, logits
