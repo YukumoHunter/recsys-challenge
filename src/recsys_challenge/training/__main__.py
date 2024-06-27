@@ -38,7 +38,9 @@ def main():
     for epoch in pbar:
         train_metrics = train_single_epoch(model, train_loader, optimizer, device)
         # todo: validation
-        pbar.write(f"[{epoch + 1}/{args.epochs}] Train Loss: {train_metrics.loss:.4f}")
+        pbar.write(
+            f"[{epoch + 1}/{args.epochs}] Train Loss: {train_metrics['loss']:.4f}"
+        )
 
 
 def train_single_epoch(model, train_loader, optimizer, device):
@@ -53,10 +55,14 @@ def train_single_epoch(model, train_loader, optimizer, device):
         loss = model.forward_train(batch)
         loss.backward()
         optimizer.step()
+        if len(total_loss) > 0:
+            print(
+                "loss:", loss.item(), "total_loss:", sum(total_loss) / len(total_loss)
+            )
 
         total_loss.append(loss.item())
 
-    return sum(total_loss) / len(total_loss)
+    return {"loss": sum(total_loss) / len(total_loss)}
 
 
 def setup_train_dataset(args):
