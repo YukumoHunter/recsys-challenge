@@ -34,7 +34,7 @@ def build_two_hop_neighbors(
         news_dict[news] = two_hop_news
 
     f_user = output_path / f"{part}-user_two_hops.txt"
-    f_news = output_path / f"{part}-news_two_hops.txt"
+    f_news = output_path / f"{part}-article_two_hops.txt"
 
     with open(f_user, "w", encoding="utf-8") as fw:
         for user, news_list in user_dict.items():
@@ -89,7 +89,7 @@ def build_one_hop_neighbors(
                 news_dict[news_index].append(user_index)
 
     f_user = output_path / f"{part}-user_one_hops.txt"
-    f_news = output_path / f"{part}-news_one_hops.txt"
+    f_news = output_path / f"{part}-article_one_hops.txt"
 
     with open(f_user, "w", encoding="utf-8") as fw:
         for user, news_list in user_dict.items():
