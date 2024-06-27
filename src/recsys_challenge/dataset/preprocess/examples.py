@@ -79,10 +79,7 @@ def build_examples(
             # new positive index
             y = indices.index(0)
 
-        for nid in target_news:
-            nid = str(nid)
-            news_index = newsid_vocab.stoi.get(nid, 0)
-
+        for news_index in target_news:
             # hist_users.append(_get_neighors(news_one_hop, news_index, cfg.max_news_one_hop))
             neighbor = _get_neighbors(news_two_hop, news_index, max_news_two_hop)
             neighbor_news.append(neighbor)
