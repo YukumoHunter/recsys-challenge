@@ -88,10 +88,9 @@ def evaluate(model, validation_loader, device):
     with torch.no_grad():
         for batch in tqdm(validation_loader, desc="Dev", leave=False):
             batch = {k: v.to(device) for k, v in batch.items()}
-            logits = model.forward_eval(batch)
+            loss, logits = model.forward_eval(batch)
 
             target = batch["y"]
-            loss, logits = torch.nn.functional.cross_entropy(logits, target)
 
             predictions.append(logits)
             targets.append(target)

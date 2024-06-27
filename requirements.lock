@@ -48,6 +48,8 @@ jedi==0.19.1
     # via ipython
 jinja2==3.1.4
     # via torch
+joblib==1.4.2
+    # via scikit-learn
 jupyter-client==8.6.2
     # via ipykernel
 jupyter-core==5.7.2
@@ -68,6 +70,8 @@ networkx==3.3
     # via torch
 numpy==2.0.0
     # via recsys-challenge
+    # via scikit-learn
+    # via scipy
     # via transformers
 packaging==24.1
     # via huggingface-hub
@@ -109,6 +113,10 @@ ruff==0.4.10
     # via recsys-challenge
 safetensors==0.4.3
     # via transformers
+scikit-learn==1.5.0
+    # via recsys-challenge
+scipy==1.14.0
+    # via scikit-learn
 six==1.16.0
     # via asttokens
     # via python-dateutil
@@ -116,6 +124,8 @@ stack-data==0.6.3
     # via ipython
 sympy==1.12.1
     # via torch
+threadpoolctl==3.5.0
+    # via scikit-learn
 tokenizers==0.19.1
     # via transformers
 torch==2.3.1
