@@ -111,18 +111,17 @@ class ValidationDataset(TrainingDataset):
             ] * (self.max_user_two_hop - len(neighbor_users))
 
 
-        for news in neighbor_news:
-            if len(news) < self.max_article_two_hop:
-                news += [
-                    0,
-                ] * (self.max_article_two_hop - len(news))
+        if len(neighbor_news) < self.max_article_two_hop:
+            neighbor_news += [
+                0,
+            ] * (self.max_article_two_hop - len(neighbor_news))
 
         output = {
             "user": user,
             "hist_news": hist_news,
             "neighbor_users": neighbor_users,
-            "target_news": [target_news[0]],
-            "neighbor_news": [neighbor_news[0]],
+            "target_news": target_news,
+            "neighbor_news": neighbor_news,
             "y": y,
             "impression_id": imp_id,
         }

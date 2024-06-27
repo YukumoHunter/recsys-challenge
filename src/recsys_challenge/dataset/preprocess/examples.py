@@ -40,7 +40,6 @@ def build_examples(
     max_user_two_hop: int = 15,
     max_news_two_hop: int = 15,
     output_name: str = "training_examples.tsv",
-    shuffle_label: bool = False,
     test: bool = False,
     seed: int = 7,
 ):
@@ -71,30 +70,38 @@ def build_examples(
 
         target_news = target_news[: negative_sampling_ratio + 1]
 
-        if shuffle_label:
-            # shuffle the target news and return new indices of samples
-            indices = list(range(len(target_news)))
-            random.shuffle(indices)
-            target_news = [target_news[i] for i in indices]
-            # new positive index
-            y = indices.index(0)
 
         for news_index in target_news:
             # hist_users.append(_get_neighors(news_one_hop, news_index, cfg.max_news_one_hop))
             neighbor = _get_neighbors(news_two_hop, news_index, max_news_two_hop)
             neighbor_news.append(neighbor)
 
-        j = {
-            "user": user_index,
-            "hist_news": hist_news,
-            "neighbor_users": neighbor_users,
-            "target_news": target_news,
-            # "hist_users": hist_users,
-            "y": y,
-            "neighbor_news": neighbor_news,
-            "impression_id": row["impression_id"],
-        }
-        fw.write(json.dumps(j) + "\n")
+        if test:
+            for i, (target, neighbor) in enumerate(zip(target_news, neighbor_news)):
+                j = {
+                    "user": user_index,
+                    "hist_news": hist_news,
+                    "neighbor_users": neighbor_users,
+                    "target_news": target,
+                    # "hist_users": hist_users,
+                    "y": 1 if i == 0 else 0,
+                    "neighbor_news": neighbor,
+                    "impression_id": row["impression_id"],
+                }
+                fw.write(json.dumps(j) + "\n")
+        else:
+
+            j = {
+                "user": user_index,
+                "hist_news": hist_news,
+                "neighbor_users": neighbor_users,
+                "target_news": target_news,
+                # "hist_users": hist_users,
+                "y": y,
+                "neighbor_news": neighbor_news,
+                "impression_id": row["impression_id"],
+            }
+            fw.write(json.dumps(j) + "\n")
 
 
 def load_hop_dict(fpath: str) -> Dict:

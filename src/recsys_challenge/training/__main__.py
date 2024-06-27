@@ -63,7 +63,7 @@ def main():
         torch.save(model.state_dict(), f".checkpoints/model_checkpoint_{epoch}.pt")
 
         pbar.write(
-            f"[{epoch + 1}/{args.epochs}] Dev Loss: {dev_metrics['loss']:.4f} Train Loss: {train_metrics['loss']:.4f}"
+            f"[{epoch + 1}/{args.epochs}] Train Loss: {train_metrics['loss']:.4f}"
         )
         pbar.write(f"Dev Metrics: {dev_metrics}")
 

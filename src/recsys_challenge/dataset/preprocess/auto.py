@@ -140,13 +140,10 @@ def main(args):
 
         match split:
             case "train":
-                shuffle_label = False
                 output_name = "training_examples.tsv"
             case "validation":
-                shuffle_label = True
                 output_name = "validation_examples.tsv"
             case "test":
-                shuffle_label = True
                 output_name = "test_examples.tsv"
             case _:
                 raise ValueError(f"Unknown split {split}")
@@ -161,8 +158,7 @@ def main(args):
             article_two_hop,
             OUTPUT_PATH_EXAMPLES,
             output_name=output_name,
-            shuffle_label=shuffle_label,
-            test=(split == TEST_SPLIT),
+            test=(split != TRAIN_SPLIT),
         )
 
 
