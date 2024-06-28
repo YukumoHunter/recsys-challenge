@@ -155,8 +155,9 @@ class GERLModel(nn.Module):
             user, hist_articles, neighbour_users, target_articles, neighbour_articles, 5
         )
 
-        target = batch["y"]
-        loss = F.cross_entropy(logits, target)
+        target = torch.tensor([1] + [0] * (logits.size(-1) - 1), device=logits.device, dtype=torch.float32).repeat(logits.size(0), 1)
+
+        loss = F.binary_cross_entropy_with_logits(logits, target)
 
         return loss
 
