@@ -1,5 +1,5 @@
 import random
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Literal
 
 import polars as pl
 from pathlib import Path
@@ -15,6 +15,7 @@ def build_two_hop_neighbors(
     output_path: Path,
     max_user_two_hop: int = 15,
     max_news_two_hop: int = 15,
+    sampling_strategy: Literal["random", "read_time", "scroll_percentage"] = "random",
 ):
     user_dict = dict()
     news_dict = dict()
@@ -23,7 +24,10 @@ def build_two_hop_neighbors(
         for news in news_list:
             two_hop_users += news_one_hop[news]
         if len(two_hop_users) > max_user_two_hop:
-            two_hop_users = random.sample(two_hop_users, max_user_two_hop)
+            if sampling_strategy == "random":
+                two_hop_users = random.sample(two_hop_users, max_user_two_hop)
+            else:
+                two_hop_users = two_hop_users[-max_user_two_hop:]
         user_dict[user] = two_hop_users
     for news, user_list in tqdm(news_one_hop.items(), desc="Building hop-2 news"):
         two_hop_news = []
@@ -54,8 +58,18 @@ def build_one_hop_neighbors(
     output_path: Path,
     max_user_one_hop: int = 50,
     max_news_one_hop: int = 50,
+    sampling_strategy: Literal["random", "read_time", "scroll_percentage"] = "random",
 ) -> Tuple[Dict, Dict]:
     behavior_df = behavior_df.fill_nan("")
+
+    if sampling_strategy == "random":
+        # random sampling, no need to sort
+        pass
+    else:
+        # sort based on sampling strategy
+        # generally, we want to ensure the HIGHEST values are at the bottom
+        # so that when the list is truncated using max_user_one_hop, we keep the most important ones
+        behavior_df = behavior_df.sort(sampling_strategy)
 
     user_dict = dict()
     news_dict = dict()
