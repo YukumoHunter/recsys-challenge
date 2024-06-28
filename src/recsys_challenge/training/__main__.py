@@ -104,7 +104,7 @@ def evaluate(model, validation_loader, device):
 
             all_labels, all_preds = group_labels(targets, predictions, impression_ids)
 
-            metrics = (
+            eval_metrics = (
                 MetricEvaluator(
                     all_labels,
                     all_preds,
@@ -123,7 +123,7 @@ def evaluate(model, validation_loader, device):
                 .evaluations
             )
 
-            for k, v in metrics.items():
+            for k, v in eval_metrics.items():
                 if k not in metrics:
                     metrics[k] = []
                 metrics[k].append(v)
