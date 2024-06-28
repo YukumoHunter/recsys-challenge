@@ -3,6 +3,8 @@ from typing import Iterable
 import numpy as np
 import json
 
+from tqdm import tqdm
+
 from recsys_challenge.evaluation.utils import convert_to_binary
 from recsys_challenge.evaluation.protocols import Metric
 
@@ -169,7 +171,12 @@ class MetricEvaluator:
     def evaluate(self) -> dict:
         self.evaluations = {
             metric_function.name: metric_function(self.labels, self.predictions)
-            for metric_function in self.metric_functions
+            for metric_function in tqdm(
+                self.metric_functions,
+                desc="Metrics",
+                leave=False,
+                total=len(self.metric_functions),
+            )
         }
         return self
 

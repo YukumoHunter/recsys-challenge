@@ -89,7 +89,7 @@ def train_single_epoch(model, train_loader, optimizer, device):
 def evaluate(model, validation_loader, device):
     model.eval()
 
-    metrics = {}
+    predictions, targets, impression_ids = [], [], []
 
     with torch.no_grad():
         for batch in tqdm(validation_loader, desc="Dev", leave=False):
@@ -98,38 +98,26 @@ def evaluate(model, validation_loader, device):
 
             target = batch["y"]
 
-            predictions = logits.cpu().numpy().tolist()
-            targets = target.long().cpu().numpy().tolist()
-            impression_ids = batch["impression_id"].cpu().numpy().tolist()
+            predictions += logits.cpu().numpy().tolist()
+            targets += target.long().cpu().numpy().tolist()
+            impression_ids += batch["impression_id"].cpu().numpy().tolist()
 
-            all_labels, all_preds = group_labels(targets, predictions, impression_ids)
+        all_labels, all_preds = group_labels(targets, predictions, impression_ids)
 
-            eval_metrics = (
-                MetricEvaluator(
-                    all_labels,
-                    all_preds,
-                    metric_functions=[
-                        AucScore(),
-                        MrrScore(),
-                        NdcgScore(k=5),
-                        NdcgScore(k=10),
-                        LogLossScore(),
-                        RootMeanSquaredError(),
-                        AccuracyScore(threshold=0.5),
-                        F1Score(threshold=0.5),
-                    ],
-                )
-                .evaluate()
-                .evaluations
-            )
-
-            for k, v in eval_metrics.items():
-                if k not in metrics:
-                    metrics[k] = []
-                metrics[k].append(v)
-
-    for k, v in metrics.items():
-        metrics[k] = sum(v) / len(v)
+        metrics = MetricEvaluator(
+            all_labels,
+            all_preds,
+            metric_functions=[
+                AucScore(),
+                MrrScore(),
+                NdcgScore(k=5),
+                NdcgScore(k=10),
+                LogLossScore(),
+                RootMeanSquaredError(),
+                AccuracyScore(threshold=0.5),
+                F1Score(threshold=0.5),
+            ],
+        ).evaluate()
 
     return metrics
 
