@@ -110,7 +110,6 @@ def main(args):
     else:
         splits = [TRAIN_SPLIT, VAL_SPLIT, TEST_SPLIT]
 
-
     for split in splits:
         if split == TEST_SPLIT:
             df_behaviors = pl.read_parquet(TEST_PATH / split / "behaviors.parquet")
@@ -166,6 +165,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--split", type=str, default="small")
     parser.add_argument("--no_test", action="store_true", default=False)
+    parser.add_argument(
+        "--sampling_strategy",
+        type=str,
+        choices=["random", "read_time", "scroll_percentage"],
+        default="random",
+    )
     args = parser.parse_args()
 
     main(args)
