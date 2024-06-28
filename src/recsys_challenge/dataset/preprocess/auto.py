@@ -156,8 +156,8 @@ def main(args):
             user_two_hop,
             article_two_hop,
             OUTPUT_PATH_EXAMPLES,
+            split=split,
             output_name=output_name,
-            test=(split != TRAIN_SPLIT),
         )
 
 

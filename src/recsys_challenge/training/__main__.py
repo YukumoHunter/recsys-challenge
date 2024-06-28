@@ -40,7 +40,7 @@ def main():
     print("Setting up validation dataset...")
     validation_dataset = setup_validation_dataset(args)
     validation_loader = DataLoader(
-        validation_dataset, batch_size=args.batch_size, shuffle=False, drop_last=False
+        validation_dataset, batch_size=1, shuffle=False, drop_last=False
     )
 
     print("Setting up model...")
@@ -57,7 +57,6 @@ def main():
     pbar = tqdm(range(args.epochs), desc="Epoch")
     for epoch in pbar:
         train_metrics = train_single_epoch(model, train_loader, optimizer, device)
-        dev_metrics = evaluate(model, validation_loader, device)
 
         # save model checkpoint
         torch.save(model.state_dict(), f".checkpoints/model_checkpoint_{epoch}.pt")
@@ -65,7 +64,9 @@ def main():
         pbar.write(
             f"[{epoch + 1}/{args.epochs}] Train Loss: {train_metrics['loss']:.4f}"
         )
-        pbar.write(f"Dev Metrics: {dev_metrics}")
+
+    dev_metrics = evaluate(model, validation_loader, device)
+    pbar.write(f"Dev Metrics: {dev_metrics}")
 
 
 def train_single_epoch(model, train_loader, optimizer, device):
@@ -77,7 +78,7 @@ def train_single_epoch(model, train_loader, optimizer, device):
         optimizer.zero_grad()
 
         batch = {k: v.to(device) for k, v in batch.items()}
-        loss = model.forward_train(batch)
+        _logits, loss = model.forward(batch)
         loss.backward()
         optimizer.step()
 
@@ -94,19 +95,17 @@ def evaluate(model, validation_loader, device):
     with torch.no_grad():
         for batch in tqdm(validation_loader, desc="Dev", leave=False):
             batch = {k: v.to(device) for k, v in batch.items()}
-            logits = model.forward_eval(batch)
+            logits, _loss = model.forward(batch)
 
             target = batch["y"]
 
-            predictions += logits.cpu().numpy().tolist()
-            targets += target.long().cpu().numpy().tolist()
-            impression_ids += batch["impression_id"].cpu().numpy().tolist()
-
-        all_labels, all_preds = group_labels(targets, predictions, impression_ids)
+            predictions += logits.softmax(-1).cpu().tolist()
+            targets += target.long().cpu().tolist()
+            impression_ids += batch["impression_id"].cpu().tolist()
 
         metrics = MetricEvaluator(
-            all_labels,
-            all_preds,
+            targets,
+            predictions,
             metric_functions=[
                 AucScore(),
                 MrrScore(),

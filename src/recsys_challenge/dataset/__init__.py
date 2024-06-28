@@ -48,7 +48,7 @@ class TrainingDataset(Dataset):
         return self.corpus_lines
 
     def __getitem__(self, item):
-        user, hist_news, neighbor_users, target_news, neighbor_news = self.parse_line(
+        user, hist_news, neighbor_users, target_news, neighbor_news, y = self.parse_line(
             item
         )
 
@@ -74,7 +74,7 @@ class TrainingDataset(Dataset):
             "neighbor_users": neighbor_users,
             "target_news": target_news,
             "neighbor_news": neighbor_news,
-            "y": 0,
+            "y": y,
         }
 
         # print(output)
@@ -90,8 +90,9 @@ class TrainingDataset(Dataset):
         neighbor_users = j["neighbor_users"]
         target_news = j["target_news"]
         neighbor_news = j["neighbor_news"]
+        y = j["y"]
 
-        return user, hist_news, neighbor_users, target_news, neighbor_news
+        return user, hist_news, neighbor_users, target_news, neighbor_news, y
 
 
 class ValidationDataset(TrainingDataset):
@@ -111,10 +112,11 @@ class ValidationDataset(TrainingDataset):
             ] * (self.max_user_two_hop - len(neighbor_users))
 
 
-        if len(neighbor_news) < self.max_article_two_hop:
-            neighbor_news += [
-                0,
-            ] * (self.max_article_two_hop - len(neighbor_news))
+        for news in neighbor_news:
+            if len(news) < self.max_article_two_hop:
+                news += [
+                    0,
+                ] * (self.max_article_two_hop - len(news))
 
         output = {
             "user": user,

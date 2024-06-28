@@ -13,10 +13,10 @@ from recsys_challenge.dataset._vocab import WordVocab
 
 # split examples into first positive and negative samples
 # and return a list with positive in index 0
-def make_samples(row, newsid_vocab, test):
+def make_samples(row, newsid_vocab, split):
     samples = row["article_ids_inview"]
 
-    if not test:
+    if split == "train":
         positive = row["article_ids_clicked"]
         negative = [x for x in samples if x not in positive]
 
@@ -34,13 +34,13 @@ def build_examples(
     user_two_hop: Dict,
     news_two_hop: Dict,
     output_path: Path,
+    split,
     negative_sampling_ratio: int = 4,
     max_user_one_hop: int = 50,
     max_news_one_hop: int = 50,
     max_user_two_hop: int = 15,
     max_news_two_hop: int = 15,
     output_name: str = "training_examples.tsv",
-    test: bool = False,
     seed: int = 7,
 ):
     random.seed(seed)
@@ -60,23 +60,30 @@ def build_examples(
         neighbor_users = _get_neighbors(user_two_hop, user_index, max_user_two_hop)
 
         neighbor_news = []
-        y = 0
 
-        target_news = make_samples(row, newsid_vocab, test)
+        target_news = make_samples(row, newsid_vocab, split)
 
         # not enough negative samples
         if len(target_news) < (negative_sampling_ratio + 1):
             continue
 
-        target_news = target_news[: negative_sampling_ratio + 1]
+        if split == "train":
+            target_news = target_news[: negative_sampling_ratio + 1]
 
+        y = [1, 0, 0, 0, 0]
+        if split == "validation":
+            clicked = [newsid_vocab.stoi.get(str(x), 0) for x in row["article_ids_clicked"]]
+            y = [1 if x in clicked else 0 for x in target_news]
+            
+            if sum(y) == 0:
+                continue
 
         for news_index in target_news:
             # hist_users.append(_get_neighors(news_one_hop, news_index, cfg.max_news_one_hop))
             neighbor = _get_neighbors(news_two_hop, news_index, max_news_two_hop)
             neighbor_news.append(neighbor)
 
-        if test:
+        if split == "test":
             for i, (target, neighbor) in enumerate(zip(target_news, neighbor_news)):
                 j = {
                     "user": user_index,
@@ -84,7 +91,6 @@ def build_examples(
                     "neighbor_users": neighbor_users,
                     "target_news": target,
                     # "hist_users": hist_users,
-                    "y": 1 if i == 0 else 0,
                     "neighbor_news": neighbor,
                     "impression_id": row["impression_id"],
                 }

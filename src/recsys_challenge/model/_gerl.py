@@ -71,7 +71,7 @@ class GERLModel(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-    def forward(
+    def _forward(
         self,
         user,
         hist_articles,
@@ -141,7 +141,7 @@ class GERLModel(nn.Module):
             -1, num_target_news
         )
 
-    def forward_train(self, batch):
+    def forward(self, batch):
         user, hist_articles, neighbour_users, target_articles, neighbour_articles = (
             batch["user"],
             batch["hist_news"],
@@ -150,31 +150,13 @@ class GERLModel(nn.Module):
             batch["neighbor_news"],
         )
 
-        # note: we set num_target_news to 5!
-        logits = self.forward(
-            user, hist_articles, neighbour_users, target_articles, neighbour_articles, 5
+        # note: we set num_target_news to 5
+        logits = self._forward(
+            user, hist_articles, neighbour_users, target_articles, neighbour_articles, batch["target_news"].size(1)
         )
 
-        target = torch.tensor([1] + [0] * (logits.size(-1) - 1), device=logits.device, dtype=torch.float32).repeat(logits.size(0), 1)
+        target = batch["y"].to(logits.dtype)
 
         loss = F.binary_cross_entropy_with_logits(logits, target)
 
-        return loss
-
-    def forward_eval(self, batch):
-        user, hist_articles, neighbour_users, target_articles, neighbour_articles = (
-            batch["user"],
-            batch["hist_news"],
-            batch["neighbor_users"],
-            batch["target_news"],
-            batch["neighbor_news"],
-        )
-        target_articles = target_articles.unsqueeze(-1)
-        neighbour_articles = neighbour_articles.unsqueeze(-1)
-
-        # note: for prediction, we set num_target_news to 1!
-        logits = self.forward(
-            user, hist_articles, neighbour_users, target_articles, neighbour_articles, 1
-        )
-
-        return logits.view(-1)
+        return logits, loss
